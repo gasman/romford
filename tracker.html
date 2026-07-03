@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>romford: the rom beeper tracker</title>
+		<script src="jquery-1.6.2.min.js"></script>
+		<script src="underscore-1.1.7.min.js"></script>
+		<script src="swfobject.js"></script>
+		<script src="dynamicaudio.js"></script>
+		<script src="json2.js"></script>
+		<script src="fancybox/jquery.fancybox-1.3.4.pack.js"></script>
+		<script src="romford-models.js"></script>
+		<script src="romford-audio.js"></script>
+		<script src="romford-compiler.js"></script>
+		<script src="romford-editor.js"></script>
+		<link rel="stylesheet" href="fancybox/jquery.fancybox-1.3.4.css" />
+		<link rel="stylesheet" href="romford.css" />
+	</head>
+	<body>
+		<div id="positions-panel">
+			<div id="title">
+				<h1>romford</h1>
+			</div>
+			<table>
+				<tr><th colspan="2">Song</th></tr>
+				<tr>
+					<td><label for="song-length-input">Song length:</label></td>
+					<td><input type="number" min="1" max="256" id="song-length-input" /></td>
+				</tr>
+				<tr>
+					<td><label for="master-volume">Master volume:</label></td>
+					<td><input type="number" min="0" max="99" id="master-volume" />
+				</tr>
+			</table>
+			<table>
+				<tr><th colspan="2">Positions</th></tr>
+				<tr>
+					<td><label for="position-input">Position:</label></td>
+					<td><input type="number" value="0" min="0" max="255" id="position-input" /></td>
+				</tr>
+				<tr>
+					<td><label for="position-length-input">Position length:</label></td>
+					<td><input type="number" min="1" max="64" id="position-length-input" /></td>
+				</tr>
+				<tr>
+					<td><label for="position-tempo-input">Position tempo:</label></td>
+					<td><input type="number" min="1" max="256" id="position-tempo-input" /></td>
+				</tr>
+				<tr>
+					<td><label for="position-patterns-input">Position patterns:</label></td>
+					<td><input type="text" id="position-patterns-input" /></td>
+				</tr>
+			</table>
+			<table>
+				<tr><th colspan="2">Editor</th></tr>
+				<tr>
+					<td><label for="editor-octave">Octave:</label></td>
+					<td><input type="number" min="2" max="8" id="editor-octave" />
+				</tr>
+				<tr>
+					<td><label for="editor-volume">Volume:</label></td>
+					<td><input type="number" min="0" max="99" id="editor-volume" />
+				</tr>
+			</table>
+			<input type="button" id="play-pattern" value="pattern" />
+			<input type="button" id="play-song" value="play" />
+			<a href="#save-data-panel" id="save-song">load / save</a>
+			<input type="button" id="compile-song" value="compile" />
+			<div style="clear: both;"></div>
+		</div>
+		<div id="patterns-panel">
+			<table id="patterns">
+			</table>
+		</div>
+		<div style="display:none;">
+			<div id="save-data-panel">
+				<textarea id="save-data"></textarea>
+				<input type="button" id="load-song" value="load" />
+			</div>
+		</div>
+	</body>
+</html>

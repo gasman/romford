@@ -1,0 +1,58 @@
+body {
+	font-family: Helvetica, Arial, sans-serif;
+	padding: 0;
+	margin: 0;
+	background-color: #fea;
+	font-size: 10pt;
+}
+#positions-panel {
+	padding-left: 12px;
+}
+#positions-panel table input {
+	width: 100px;
+}
+#positions-panel #title {
+	float: left;
+	width: 200px;
+}
+#positions-panel #title h1 {
+	font-style: italic;
+}
+#positions-panel table {
+	float: left;
+}
+#patterns-panel {
+	clear: both;
+	height: 400px;
+	overflow: auto;
+	background-color: #edc;
+}
+
+table#patterns {
+	border-spacing: 0;
+}
+
+table#patterns tr.playing {
+	background-color: #fec;
+}
+table#patterns th {
+	width: 24px;
+	text-align: right;
+	padding-right: 8px;
+}
+table#patterns td {
+	height: 12pt;
+	font-family: monospace;
+	padding-left: 8px;
+	padding-right: 8px;
+	border: 1px solid #888;
+	cursor: default;
+}
+table#patterns td:focus {
+	background-color: #0f0;
+}
+
+#save-data {
+	width: 800px;
+	height: 400px;
+}
