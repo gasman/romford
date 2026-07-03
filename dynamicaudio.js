@@ -10,92 +10,67 @@ function DynamicAudio(args) {
     }
 }
 
-DynamicAudio.nextId = 1;
+/* Sample rate that the caller's audio data is generated at. Buffers are
+   created at this rate regardless of the AudioContext's own sample rate -
+   the Web Audio API resamples automatically on playback. */
+DynamicAudio.SAMPLE_RATE = 44100;
 
 DynamicAudio.prototype = {
-    nextId: null,
-    swf: 'dynamicaudio.swf',
-    
-    audioElement: null,
-    flashWrapper: null,
-    flashElement: null,
-    
+    audioContext: null,
+    nextStartTime: 0,
+    pendingSources: null,
+
     init: function(opts) {
-        var self = this;
-        self.id = DynamicAudio.nextId++;
-        
-        if (opts && typeof opts['swf'] != 'undefined') {
-            self.swf = opts['swf'];
-        }
+        if (this.audioContext) return;
 
-        // Attempt to create an audio element
-        if (typeof Audio != 'undefined') {
-            self.audioElement = new Audio();
-            if (self.audioElement.mozSetup) {
-                self.audioElement.mozSetup(2, 44100, 1);
-                return;
-            }
-        }
-
-        // Fall back to creating flash player
-        self.audioElement = null;
-        self.flashWrapper = document.createElement('div');
-        self.flashWrapper.id = 'dynamicaudio-flashwrapper-'+self.id;
-        // Credit to SoundManager2 for this:
-        var s = self.flashWrapper.style;
-        s['position'] = 'fixed';
-        s['width'] = s['height'] = '8px'; // must be at least 6px for flash to run fast
-        s['bottom'] = s['left'] = '0px';
-        s['overflow'] = 'hidden';
-        self.flashElement = document.createElement('div');
-        self.flashElement.id = 'dynamicaudio-flashelement-'+self.id;
-        self.flashWrapper.appendChild(self.flashElement);
-
-        document.body.appendChild(self.flashWrapper);
-
-        swfobject.embedSWF(
-            self.swf,
-            self.flashElement.id,
-            "8",
-            "8",
-            "9.0.0",
-            null,
-            null,
-            {'allowScriptAccess': 'always'},
-            null,
-            function(e) {
-                self.flashElement = e.ref;
-            }
-        );
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new AudioContextClass();
+        this.nextStartTime = this.audioContext.currentTime;
+        this.pendingSources = [];
     },
-    
+
+    /* samples: interleaved stereo array of floats in the range -1..1 (as produced
+       by romford-audio.js's square wave generator, which uses 0/1) */
     write: function(samples) {
-        if (this.audioElement != null) {
-            this.audioElement.mozWriteAudio(samples);
+        var audioContext = this.audioContext;
+        if (!audioContext) return;
+
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
         }
-        else if (this.flashElement != null) {
-            var out = new Array(samples.length);
-            for (var i = samples.length-1; i != 0; i--) {
-                out[i] = Math.floor(samples[i]*32768);
-            }
-            this.flashElement.write(out.join(' '));
+
+        var frameCount = samples.length / 2;
+        var buffer = audioContext.createBuffer(2, frameCount, DynamicAudio.SAMPLE_RATE);
+        var left = buffer.getChannelData(0);
+        var right = buffer.getChannelData(1);
+        for (var i = 0; i < frameCount; i++) {
+            left[i] = samples[i * 2];
+            right[i] = samples[i * 2 + 1];
         }
+
+        var source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+
+        var startTime = Math.max(this.nextStartTime, audioContext.currentTime);
+        source.start(startTime);
+        this.nextStartTime = startTime + buffer.duration;
+
+        var pendingSources = this.pendingSources;
+        pendingSources.push(source);
+        source.onended = function() {
+            var index = pendingSources.indexOf(source);
+            if (index !== -1) pendingSources.splice(index, 1);
+        };
     },
-    
+
     'stop': function() {
-        this.flashElement.stop();
-    },
-    writeInt: function(samples) {
-        if (this.audioElement != null) {
-            var out = new Array(samples.length);
-            for (var i = samples.length-1; i != 0; i--) {
-                out[i] = Math.floor(samples[i]/32768);
-            }
-            this.audioElement.mozWriteAudio(out.length, out);
-        }
-        else if (this.flashElement != null) {
-            this.flashElement.write(samples.join(' '));
-        }
+        if (!this.audioContext) return;
+
+        this.pendingSources.forEach(function(source) {
+            try { source.stop(); } catch (e) { /* already stopped */ }
+        });
+        this.pendingSources = [];
+        this.nextStartTime = this.audioContext.currentTime;
     }
 };
-
